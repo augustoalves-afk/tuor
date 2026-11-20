@@ -24,46 +24,85 @@
 <body>
   <div id="panorama"></div>
   <script>
-    // Função que calcula os limites ideais conforme a orientação da tela
     function obterLimitesZoom() {
       const telaEmPe = window.innerHeight > window.innerWidth;
 
       if (telaEmPe) {
-        // Celular em pé (Retrato): zoom mais fechado para não sobrar preto em cima/baixo
         return { hfov: 55, maxHfov: 60, minHfov: 35 };
       } else {
-        // Computador ou celular deitado (Paisagem): visão mais aberta e confortável
         return { hfov: 95, maxHfov: 105, minHfov: 45 };
       }
     }
 
     const limitesIniciais = obterLimitesZoom();
 
-    // Inicia o visualizador com os valores detectados
     const viewer = pannellum.viewer('panorama', {
-      "type": "equirectangular",
-      "panorama": "garagem.jpg",
-      "autoLoad": true,
-      "haov": 360,
-      "vaov": 122,
-      "minPitch": -20,
-      "maxPitch": 20,
-      "hfov": limitesIniciais.hfov,
-      "maxHfov": limitesIniciais.maxHfov,
-      "minHfov": limitesIniciais.minHfov,
-      "showZoomCtrl": false
+      "default": {
+        "firstScene": "ponto1",
+        "autoLoad": true,
+        "sceneFadeDuration": 800,
+        "showZoomCtrl": false,
+        "hotSpotDebug": true
+      },
+
+      "scenes": {
+        "ponto1": {
+          "title": "Garagem",
+          "type": "equirectangular",
+          "panorama": "garagem.jpg",
+          "haov": 360,
+          "vaov": 122,
+          "minPitch": -20,
+          "maxPitch": 20,
+          "hfov": limitesIniciais.hfov,
+          "maxHfov": limitesIniciais.maxHfov,
+          "minHfov": limitesIniciais.minHfov,
+          "hotSpots": [
+            {
+              "pitch": -5,
+              "yaw": 10,
+              "type": "scene",
+              "text": "Ir para o Ponto 2",
+              "sceneId": "ponto2"
+            }
+          ]
+        },
+
+        "ponto2": {
+          "title": "Ponto 2",
+          "type": "equirectangular",
+          "panorama": "1 - 14_blended_fused.jpg",
+          "haov": 360,
+          "vaov": 122,
+          "minPitch": -20,
+          "maxPitch": 20,
+          "hfov": limitesIniciais.hfov,
+          "maxHfov": limitesIniciais.maxHfov,
+          "minHfov": limitesIniciais.minHfov,
+          "hotSpots": [
+            {
+              "pitch": -5,
+              "yaw": -170,
+              "type": "scene",
+              "text": "Voltar para a Garagem",
+              "sceneId": "ponto1"
+            }
+          ]
+        }
+      }
     });
 
-    // Atualiza automaticamente se o usuário girar o celular ou redimensionar a janela
-    window.addEventListener('resize', () => {
+    function aplicarLimitesNaCenaAtual() {
       const novosLimites = obterLimitesZoom();
       viewer.setHfovBounds([novosLimites.minHfov, novosLimites.maxHfov]);
 
-      // Se o zoom atual ficou maior que o novo limite permitido, corrige na hora
       if (viewer.getHfov() > novosLimites.maxHfov) {
         viewer.setHfov(novosLimites.maxHfov);
       }
-    });
+    }
+
+    window.addEventListener('resize', aplicarLimitesNaCenaAtual);
+    viewer.on('scenechange', aplicarLimitesNaCenaAtual);
   </script>
 </body>
 </html>
